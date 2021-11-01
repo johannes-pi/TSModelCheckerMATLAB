@@ -54,6 +54,8 @@ classdef TransitionSystem
             % VERIFYWITHBA  generate a verified transition system that
             % mets the safety condition
             
+            
+            
         end
         
     end
