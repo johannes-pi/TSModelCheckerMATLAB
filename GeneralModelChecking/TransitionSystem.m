@@ -4,12 +4,12 @@ classdef TransitionSystem
     %   Detailed explanation goes here
     
     properties
-        states                  (1,:) string    % states
-        actions                 (1,:) string    % actions
-        transitions             (:,3) string    % transitions
-        initialStates           (1,:) string    % initial states
-        atomicProps             (1,:) string    % atomic propositions
-        labels                  (:,2) string    % labels ( state | label )
+        states                  (1,:) string    % states S
+        actions                 (1,:) string    % actions Act
+        transitions             (:,3) string    % transitions Tr
+        initialStates           (1,:) string    % initial states I
+        atomicProps             (1,:) string    % atomic propositions AP
+        labels                  (:,2) string    % labels ( state | label ) L
     end
     
     methods
