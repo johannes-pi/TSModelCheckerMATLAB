@@ -25,7 +25,7 @@ classdef TransitionSystem
         end
         
         function plotedDigraph = plotTS(obj, figureNr)
-            %PLOTTS Plot a transition system as digraph.
+            %PLOTEDDIGRAPH Plot a transition system as digraph.
             %   Detailed explanation goes here
             arguments
                 obj
@@ -48,6 +48,12 @@ classdef TransitionSystem
             graph = digraph(EdgeTable,NodeTable);
 
             plotedDigraph = plot(graph,'EdgeLabel', graph.Edges.Code, 'NodeLabel', graph.Nodes.Label);
+        end
+        
+        function verfiedTS = verifyWithBA(obj, buchiAutomata)
+            % VERIFYWITHBA  generate a verified transition system that
+            % mets the safety condition
+            
         end
         
     end
