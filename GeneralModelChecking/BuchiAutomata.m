@@ -5,8 +5,8 @@ classdef BuchiAutomata
     
      properties
         states                  (1,:) string    % states Q
-        symbols                 (1,:) string    % symbols Sig
-        transitions             (:,3) string    % transitions delta
+        symbols                 (1,:) cell      % symbols Sig
+        transitions             (:,3) cell      % transitions delta
         initialStates           (1,:) string    % initial states Q0
         finalStates             (1,:) string    % final states F
     end

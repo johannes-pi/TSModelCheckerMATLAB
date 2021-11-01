@@ -3,9 +3,9 @@
 % 1 vehicle
 %dirs = ["ew"];
 % 2 vehicle
-%dirs = ["ew","wn"];
+dirs = ["ew","wn"];
 % 3 vehicle
-dirs = ["ew","wn","nw"];
+%dirs = ["ew","wn","nw"];
 % 4 vehicle
 %dirs = ["ew","wn","nw","se"];
 

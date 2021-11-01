@@ -50,10 +50,238 @@ classdef TransitionSystem
             plotedDigraph = plot(graph,'EdgeLabel', graph.Edges.Code, 'NodeLabel', graph.Nodes.Label);
         end
         
-        function verfiedTS = verifyWithBA(obj, buchiAutomata)
+        function APStruct = labelToAPStruct(obj, label)
+            % LABELTOAPSTRUCT Convert the atomic propositions contained in
+            % a label to positive logical values in a structure containing
+            % all atomic propositions
+            arguments
+                obj     (1,1) TransitionSystem 
+                label   (1,1) string   % containing labels separeted by space
+            end
+            
+            % generate structure with all APs
+            for atomicProp = obj.atomicProps
+                APStruct.(atomicProp) = 0;
+            end
+            % set atomic propositions from label to true            
+            activeAPs = split(label)'; % get all active atomic propositions from label (delimiter is " ")
+            for atomicProp = activeAPs
+                APStruct.(atomicProp) = 1;
+            end
+        end
+        
+        function verfiedTS = getVerifiedWithBA(TS, BA, loopDetectionActive)
             % VERIFYWITHBA  generate a verified transition system that
             % mets the safety condition
+            arguments
+                TS                      (1,1) TransitionSystem % the transition system to check
+                BA                      (1,1) BuchiAutomata   % the automat to check the transition system with
+                loopDetectionActive     (1,1) logical = false; % detection for loops in BA deactivated for performance reasons
+            end
             
+            %% merge TS and BA
+            % States
+            Sm = TS.states' +" "+ BA.states;
+            % rearrange to row vector
+            Sm = Sm(:)';
+            
+            % Transitions
+            Trm = strings(0,0);
+            % for every transition from TS
+            for i = 1:size(TS.transitions,1)
+                % get label from transition target
+                labelTarget = TS.labels(TS.transitions(i,2)==TS.labels(:,1),2);
+                % get structure with target label atomic props true
+                positiveAPs = TS.labelToAPStruct(labelTarget);
+                % test which transitions are possible to target with buchi automata
+                for j=1:size(BA.transitions,1)
+                    if BA.transitions{j,3}(positiveAPs) % check which transition becomes true
+                        % Build transition in TS x A
+                        Trm(end+1,:) = [join([TS.transitions(i,1) BA.transitions{j,1}]) ...
+                                        join([TS.transitions(i,2) BA.transitions{j,2}]) ...
+                                        TS.transitions(i,3)];
+                    end
+                end
+            end
+            
+            
+            % Initial states
+            Im = strings(0,0);
+            for i=1:length(TS.initialStates) % check every TS initial state
+                labelInitState = TS.labels(TS.initialStates(i)==TS.labels(:,1),2);
+                activeAPs = TS.labelToAPStruct(labelInitState); % get active APs from this init state
+                for j=1:size(BA.transitions,1)
+                    fromBAInitState = any(BA.transitions{j,1} == BA.initialStates); % this BA transition starts at a initial state
+                    initStateReachable = BA.transitions{j,3}(activeAPs); % BA transition is fulfilled by TS initial state label
+                    if fromBAInitState && initStateReachable
+                        % this is a valid initial state in TS x A
+                        Im(end+1) = TS.initialStates(i) +" "+ BA.transitions{j,2}; % the new state is a TS init state + target of BA transition
+                    end
+                end
+            end
+            
+            % Atomic propositions
+            APm = BA.states;
+            
+            % Labels
+            % Combine to new state-label combination
+            Lm(1:length(Sm),1) = Sm'; % label states
+            Lm(:,2) = repelem(BA.states,length(TS.states))'; % matching labels
+         
+            
+            
+            %% delete states and transitions from TS with merged TSm
+            
+            % delete dead sources
+            % remove states that are not target of a transition and not initial states
+            % from TSm
+            for state = Sm
+                if ~any(state == Im) && ~any(state == Trm(:,2))
+                    Trm(state == Trm(:,1),:) = []; % remove all transitions from this state
+                    Sm(state == Sm) = []; % remove state
+                end
+            end
+            
+            % find all final states in Sm
+            FSm = strings(0,0);
+            % get all states that are also final state of A
+            for i=1:length(BA.finalStates)
+                numFinalStateChars = strlength(BA.finalStates(i)); % get number of characters in final state of A
+                posInString = strfind(Sm,BA.finalStates(i),'ForceCellOutput',true); % check position of the final state of A in state string
+                % check for every state if it is containing the final state of A at correct
+                % position
+                for j=1:length(Sm)
+                    if any(posInString{j} == (strlength(Sm(j)) - (numFinalStateChars - 1))) % final state of A in correct position
+                        FSm(end+1) = Sm(j);% add to list of final states
+                    end
+                end
+            end
+            
+            % find all dead targets
+            % remove not final states without any further state
+            for state = Sm
+                if ~any(state == FSm) && ~any(state == Trm(:,1))
+                    Trm(state == Trm(:,2),:) = []; % remove all transitions to this state
+                    Sm(state == Sm) = []; % remove state
+                end
+            end
+            
+            if ~loopDetectionActive
+                % find all not stable final states
+                % remove final states that have a successor
+                % ATTENTION: this does not work with loops, final state is stable when a
+                % loop lead from this state back the state
+                for finalState = FSm
+                    if any(finalState == Trm(:,1))
+                        FSm(finalState == FSm) = [];
+                    end
+                end
+            else
+                % find all dead loops
+                % delete all loops that are not connected to a init and final state
+                % Digraph
+                % table with all states
+                NodeTable = table(Sm', 'VariableNames',{'Name'});
+                % table with all edges (transitions) and labled with actions
+                EdgeTable = table([Trm(:,1) Trm(:,2)], Trm(:,3), 'VariableNames',{'EndNodes' 'Code'});
+                % build digraph with it
+                graph = digraph(EdgeTable,NodeTable);
+                % graph with connections to every reachable state from graph
+                graphReachableStates = transclosure(graph);
+                % adjacency matrix of graph reachable states
+                adjMatrixReachable = full(adjacency(graphReachableStates));
+                
+                % remove all states not reachable from init state
+                for i=length(FSm):-1:1
+                    % check if state can be reached by any init state
+                    allPreStates = predecessors(graphReachableStates,FSm(i));
+                    if ~any(Im == allPreStates)
+                        FSm(i) = []; % remove because could not be reached by any init state
+                    end
+                end
+                % remove all not stable states (not final infinetly often)
+                for i=length(FSm):-1:1
+                    allPreStates = predecessors(graphReachableStates,FSm(i)); % get all states leading to this one
+                    postStates = successors(graph,FSm(i));
+                    % check if there are post states and if the post states could not reach this final state
+                    if ~isempty(postStates)
+                        % check if the post states are also prepre...States from our state, when not delete them
+                        validFinal = false;
+                        for postState = postStates'
+                            if any(postState == allPreStates)
+                                % post state is also pre state, all fine
+                                validFinal = true;
+                            end
+                        end
+                        % delete from final list, because there is not one post state that
+                        % is also prepre... state from this state
+                        if  ~validFinal
+                            FSm(i) = [];
+                        end
+                    end
+                end
+                
+                % delete dead targets and dead loops
+                % find all states that is no transition leaving and they are not a final
+                % state and also unconnected loops
+                for state = Sm
+                    % must be init state or final state or could be reached from a init
+                    % state and lead to final state
+                    if all(state ~= Im) && all(state ~= FSm)
+                        % not from init reachable or not reaches a final state
+                        if ~any(Im == Sm(logical(adjMatrixReachable(:,Sm == state)))) ... % from a init state not reachable
+                                || ~any(FSm == Sm(logical(adjMatrixReachable(Sm == state,:)))) % not leading to a final state
+                            Sm(state == Sm) = []; % remove state
+                            Trm(any(state == Trm(:,[1 2]),2),:) = []; % remove all transitions to and from this state
+                        end
+                    end
+                end
+            end
+            
+            %% delete all states, transitions, etc, from verfiedTS when they are not in TSm
+            verfiedTS = TS;
+            
+            % States
+            for state = verfiedTS.states
+                if ~any(contains(Sm,state)) % search if state is in Sm
+                    % if the state is not in Sm, delete it
+                    verfiedTS.states(state == verfiedTS.states) = [];
+                end
+            end
+            
+            % Actions
+            for action = verfiedTS.actions
+                if ~any(action == Trm(:,3))
+                    % delete all actions that are not used in TSm
+                    verfiedTS.actions(action == verfiedTS.actions) = [];
+                end
+            end
+            
+            % Transitions
+            % delete atomic proposition of A from merged transition
+            TrmClean = split(Trm(:,1:2));
+            TrmClean = [TrmClean(:,:,1) Trm(:,3)];
+            for i=size(verfiedTS.transitions,1):-1:1
+                % check if there is an action in Trm that has the same source, target
+                % and action
+                if ~any(all(verfiedTS.transitions(i,:) == TrmClean,2))
+                    verfiedTS.transitions(i,:) = []; % delete transition when not in merged
+                end
+            end
+            
+            % Initial states
+            % get TS inital states out of Im
+            ImClean = split(Im," ",3);
+            ImClean = ImClean(:,:,1);
+            for initState = verfiedTS.initialStates
+                if ~any(initState == ImClean)
+                    verfiedTS.initialStates(initState == verfiedTS.initialStates) = []; % delete init state when not in merged
+                end
+            end
+            
+            % Labels
+            % delete label when the state does not exists
+            verfiedTS.labels(all(verfiedTS.labels(:,1) ~= verfiedTS.states,2),:) = [];
             
             
         end
