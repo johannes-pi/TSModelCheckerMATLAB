@@ -20,8 +20,7 @@ classdef BuchiAutomata
             obj.transitions = transitions;
             obj.initialStates = initialStates;
             obj.finalStates = finalStates;
-        end
-        
+        end      
     end
 end
 
