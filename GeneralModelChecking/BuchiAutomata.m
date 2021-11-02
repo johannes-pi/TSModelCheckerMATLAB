@@ -1,4 +1,4 @@
-classdef BuchiAutomata
+classdef BuchiAutomata < handle
     %BUCHIAUTOMATA Automata with states, symbols, transitions, initial and
     %final states.
     %   Detailed explanation goes here

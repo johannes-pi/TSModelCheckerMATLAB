@@ -1,4 +1,4 @@
-classdef TransitionSystem
+classdef TransitionSystem < handle
     %TRANSITIONSYSTEM State system with states, actions, transitions,
     %inital states, atomic propositions and labels.
     %   Detailed explanation goes here
@@ -70,36 +70,36 @@ classdef TransitionSystem
             end
         end
         
-        function verfiedTS = getVerifiedWithBA(TS, BA, loopDetectionActive)
-            % VERIFYWITHBA  generate a verified transition system that
-            % mets the safety condition
+        function synthesizeWithBA(obj, BA, loopDetectionActive)
+            % SYNTHESIZEWITHBA  Synthesize with Büchi Automata to meet the 
+            %conditions from this automata
             arguments
-                TS                      (1,1) TransitionSystem % the transition system to check
+                obj                     (1,1) TransitionSystem % the transition system to check
                 BA                      (1,1) BuchiAutomata   % the automat to check the transition system with
                 loopDetectionActive     (1,1) logical = false; % detection for loops in BA deactivated for performance reasons
             end
             
             %% merge TS and BA
             % States
-            Sm = TS.states' +" "+ BA.states;
+            Sm = obj.states' +" "+ BA.states;
             % rearrange to row vector
             Sm = Sm(:)';
             
             % Transitions
             Trm = strings(0,0);
             % for every transition from TS
-            for i = 1:size(TS.transitions,1)
+            for i = 1:size(obj.transitions,1)
                 % get label from transition target
-                labelTarget = TS.labels(TS.transitions(i,2)==TS.labels(:,1),2);
+                labelTarget = obj.labels(obj.transitions(i,2)==obj.labels(:,1),2);
                 % get structure with target label atomic props true
-                positiveAPs = TS.labelToAPStruct(labelTarget);
+                positiveAPs = obj.labelToAPStruct(labelTarget);
                 % test which transitions are possible to target with buchi automata
                 for j=1:size(BA.transitions,1)
                     if BA.transitions{j,3}(positiveAPs) % check which transition becomes true
                         % Build transition in TS x A
-                        Trm(end+1,:) = [join([TS.transitions(i,1) BA.transitions{j,1}]) ...
-                                        join([TS.transitions(i,2) BA.transitions{j,2}]) ...
-                                        TS.transitions(i,3)];
+                        Trm(end+1,:) = [join([obj.transitions(i,1) BA.transitions{j,1}]) ...
+                                        join([obj.transitions(i,2) BA.transitions{j,2}]) ...
+                                        obj.transitions(i,3)];
                     end
                 end
             end
@@ -107,15 +107,21 @@ classdef TransitionSystem
             
             % Initial states
             Im = strings(0,0);
-            for i=1:length(TS.initialStates) % check every TS initial state
-                labelInitState = TS.labels(TS.initialStates(i)==TS.labels(:,1),2);
-                activeAPs = TS.labelToAPStruct(labelInitState); % get active APs from this init state
+            % for every TS initial state
+            for i=1:length(obj.initialStates)
+                % get the label from the initial state
+                labelInitState = obj.labels(obj.initialStates(i)==obj.labels(:,1),2);
+                % get structure with initial state label atomic props true
+                activeAPs = obj.labelToAPStruct(labelInitState);
+                % test which initial states are possible with buchi automata
                 for j=1:size(BA.transitions,1)
-                    fromBAInitState = any(BA.transitions{j,1} == BA.initialStates); % this BA transition starts at a initial state
-                    initStateReachable = BA.transitions{j,3}(activeAPs); % BA transition is fulfilled by TS initial state label
+                    % this BA transition starts at a initial state
+                    fromBAInitState = any(BA.transitions{j,1} == BA.initialStates);
+                    % BA transition is fulfilled by TS initial state label
+                    initStateReachable = BA.transitions{j,3}(activeAPs); 
                     if fromBAInitState && initStateReachable
-                        % this is a valid initial state in TS x A
-                        Im(end+1) = TS.initialStates(i) +" "+ BA.transitions{j,2}; % the new state is a TS init state + target of BA transition
+                        % the new state is a TS init state + target of BA transition
+                        Im(end+1) = obj.initialStates(i) +" "+ BA.transitions{j,2}; 
                     end
                 end
             end
@@ -126,7 +132,7 @@ classdef TransitionSystem
             % Labels
             % Combine to new state-label combination
             Lm(1:length(Sm),1) = Sm'; % label states
-            Lm(:,2) = repelem(BA.states,length(TS.states))'; % matching labels
+            Lm(:,2) = repelem(BA.states,length(obj.states))'; % matching labels
          
             
             
@@ -144,15 +150,19 @@ classdef TransitionSystem
             
             % find all final states in Sm
             FSm = strings(0,0);
-            % get all states that are also final state of A
+            % get all states that are also final state of BA
             for i=1:length(BA.finalStates)
-                numFinalStateChars = strlength(BA.finalStates(i)); % get number of characters in final state of A
-                posInString = strfind(Sm,BA.finalStates(i),'ForceCellOutput',true); % check position of the final state of A in state string
-                % check for every state if it is containing the final state of A at correct
+                % get number of characters in final state of BA
+                numFinalStateChars = strlength(BA.finalStates(i)); 
+                % check position of the final state of BA in state string
+                posInString = strfind(Sm,BA.finalStates(i),'ForceCellOutput',true);
+                % check for every state if it is containing the final state of BA at correct
                 % position
                 for j=1:length(Sm)
-                    if any(posInString{j} == (strlength(Sm(j)) - (numFinalStateChars - 1))) % final state of A in correct position
-                        FSm(end+1) = Sm(j);% add to list of final states
+                    % final state of A in correct position
+                    if any(posInString{j} == (strlength(Sm(j)) - (numFinalStateChars - 1)))
+                        % add to list of final states
+                        FSm(end+1) = Sm(j);
                     end
                 end
             end
@@ -239,33 +249,32 @@ classdef TransitionSystem
             end
             
             %% delete all states, transitions, etc, from verfiedTS when they are not in TSm
-            verfiedTS = TS;
             
             % States
-            for state = verfiedTS.states
+            for state = obj.states
                 if ~any(contains(Sm,state)) % search if state is in Sm
                     % if the state is not in Sm, delete it
-                    verfiedTS.states(state == verfiedTS.states) = [];
+                    obj.states(state == obj.states) = [];
                 end
             end
             
             % Actions
-            for action = verfiedTS.actions
+            for action = obj.actions
                 if ~any(action == Trm(:,3))
                     % delete all actions that are not used in TSm
-                    verfiedTS.actions(action == verfiedTS.actions) = [];
+                    obj.actions(action == obj.actions) = [];
                 end
             end
             
             % Transitions
-            % delete atomic proposition of A from merged transition
+            % clear atomic proposition of BA from merged transition
             TrmClean = split(Trm(:,1:2));
             TrmClean = [TrmClean(:,:,1) Trm(:,3)];
-            for i=size(verfiedTS.transitions,1):-1:1
+            for i=size(obj.transitions,1):-1:1
                 % check if there is an action in Trm that has the same source, target
                 % and action
-                if ~any(all(verfiedTS.transitions(i,:) == TrmClean,2))
-                    verfiedTS.transitions(i,:) = []; % delete transition when not in merged
+                if ~any(all(obj.transitions(i,:) == TrmClean,2))
+                    obj.transitions(i,:) = []; % delete transition when not in merged
                 end
             end
             
@@ -273,16 +282,16 @@ classdef TransitionSystem
             % get TS inital states out of Im
             ImClean = split(Im," ",3);
             ImClean = ImClean(:,:,1);
-            for initState = verfiedTS.initialStates
+            for initState = obj.initialStates
                 if ~any(initState == ImClean)
-                    verfiedTS.initialStates(initState == verfiedTS.initialStates) = []; % delete init state when not in merged
+                    % delete init state when not in merged
+                    obj.initialStates(initState == obj.initialStates) = [];
                 end
             end
             
             % Labels
             % delete label when the state does not exists
-            verfiedTS.labels(all(verfiedTS.labels(:,1) ~= verfiedTS.states,2),:) = [];
-            
+            obj.labels(all(obj.labels(:,1) ~= obj.states,2),:) = [];
             
         end
         

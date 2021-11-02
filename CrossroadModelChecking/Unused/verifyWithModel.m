@@ -25,22 +25,22 @@ if ~isempty(atPassing)
 end
 
 % Generate Transition System for the crossroad
-TS = getTScrossroad(directions);
+TS = TScrossroad(directions);
 
 % Generate a verified Transition System with Büchi Automata
-[S, Act, Tr, I, AP, L] = getVerifiedTS(TS.states, TS.actions, TS.transitions, TS.initialStates, TS.atomicProps, TS.labels, crossingPaths);
-
+%TS = getVerifiedTS(TS, crossingPaths);
+TS.synthesizeWithSP(crossingPaths);
 
 % check if state exists
-if any(currentState == S)
+if any(currentState == TS.states)
     % get all actions that should be done
-    currentActions = Act(contains(Act,directions(1,:)));
+    currentActions = TS.actions(contains(TS.actions,directions(1,:)));
     % check all actions
     for i=1:length(currentActions)
-        if any(all([currentState currentActions(i)] == Tr(:,[1 3]),2))
+        if any(all([currentState currentActions(i)] == TS.transitions(:,[1 3]),2))
             % action exists!! :)
             % go to state corresponding to this action
-            currentState = Tr(all([currentState currentActions(i)] == Tr(:,[1 3]),2),2);
+            currentState = TS.transitions(all([currentState currentActions(i)] == TS.transitions(:,[1 3]),2),2);
         else
             verified = false;
             return

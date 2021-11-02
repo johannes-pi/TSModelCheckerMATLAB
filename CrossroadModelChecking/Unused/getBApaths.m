@@ -9,15 +9,15 @@ end
 % States
 Q = ["q0" "q1"];
 
-    
-% Sigma (transition conditions)
-% make a safety function that could be accessed to check a transition
-% condition
-SF = @(allAPs, eqNr) checkSafetyCondition(crossingPath(1),crossingPath(2), allAPs, eqNr);
+% Symbols Sigma (transition conditions)
+% conditions for the transition between states
 
-Sig = {@(allAPs) (SF(allAPs, 1)) ...
-       @(allAPs) (SF(allAPs, 2)) ...
-       @(allAPs) (SF(allAPs, 3))}; % the eqations are stored in  function safety condition
+dir1 = crossingPath(1);
+dir2 = crossingPath(2);
+
+Sig = {@(allAPs) (~(allAPs.("p"+dir1) && allAPs.("p"+dir2)) && ~allAPs.("o"+dir1) && ~allAPs.("o"+dir2)) ...
+       @(allAPs) (allAPs.("o"+dir1) || allAPs.("o"+dir2)) ...
+       @(allAPs) (1)};
 
 % Transitions
 delta = {"q0" "q0" Sig{1}; ...

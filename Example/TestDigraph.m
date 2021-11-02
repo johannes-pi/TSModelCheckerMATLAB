@@ -10,43 +10,43 @@ dirs = ["ew","wn"];
 %dirs = ["ew","wn","nw","se"];
 
 % Generate Transition System for the crossroad
-TS = getTScrossroad(dirs);
+TS = TScrossroad(dirs);
 
 % Plot the crossroad TS
-TS.plotTS();
+%TS.plotTS();
 
-% array with paths that are crossing in each line        
-crossingPaths = ["pne", "pew";
-                 "pne", "pwn";
-                 "pne", "pes";
-                 "pne", "psn";
-                 "pne", "pwe";
-                 "pne", "pse";
-                 "pns", "pew";
-                 "pns", "psw";
-                 "pns", "pwn";
-                 "pns", "pwe";
-                 "pns", "pws";
-                 "pns", "pes";
-                 "pnw", "pew";
-                 "pnw", "psw";
-                 "pes", "psn";
-                 "pes", "psw";
-                 "pes", "pwe";
-                 "pes", "pws";
-                 "pew", "psn";
-                 "pew", "pwn";
-                 "pew", "psw";
-                 "pen", "psn";
-                 "pen", "pwn";
-                 "psw", "pwe";
-                 "psw", "pwn";
-                 "psn", "pwe";
-                 "psn", "pwn";
-                 "pse", "pwe"];          
+% array with list of two paths that are crossing on the crossroad     
+             
+crossingPaths = ["ne", "ew";
+                 "ne", "wn";
+                 "ne", "es";
+                 "ne", "sn";
+                 "ne", "we";
+                 "ne", "se";
+                 "ns", "ew";
+                 "ns", "sw";
+                 "ns", "wn";
+                 "ns", "we";
+                 "ns", "ws";
+                 "ns", "es";
+                 "nw", "ew";
+                 "nw", "sw";
+                 "es", "sn";
+                 "es", "sw";
+                 "es", "we";
+                 "es", "ws";
+                 "ew", "sn";
+                 "ew", "wn";
+                 "ew", "sw";
+                 "en", "sn";
+                 "en", "wn";
+                 "sw", "we";
+                 "sw", "wn";
+                 "sn", "we";
+                 "sn", "wn";
+                 "se", "we"]; 
 
-% Generate a verified Transition System with Büchi Automata
-[S, Act, Tr, I, AP, L] = getVerifiedTS(TS.states, TS.actions, TS.transitions, TS.initialStates, TS.atomicProps, TS.labels, crossingPaths);
-
+% Generate a  Transition System that does not contain crossing paths
+TS.synthesizeWithSPs(crossingPaths);
 % Plot the verified TS
-plotTS(S, Act, Tr, I, AP, L);
+TS.plotTS();
