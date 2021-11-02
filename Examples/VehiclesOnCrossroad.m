@@ -1,22 +1,5 @@
-
-% Directions of vehicles
-% 1 vehicle
-%dirs = ["ew"];
-% 2 vehicle
-dirs = ["ew","wn"];
-% 3 vehicle
-%dirs = ["ew","wn","nw"];
-% 4 vehicle
-%dirs = ["ew","wn","nw","se"];
-
-% Generate Transition System for the crossroad
-TS = TScrossroad(dirs);
-
-% Plot the crossroad TS
-%TS.plotTS();
-
-% array with list of two paths that are crossing on the crossroad     
-             
+% Pairs of directions that are crossing at the crossroad ("ne" means
+% Nort-East)
 crossingPaths = ["ne", "ew";
                  "ne", "wn";
                  "ne", "es";
@@ -44,9 +27,23 @@ crossingPaths = ["ne", "ew";
                  "sw", "wn";
                  "sn", "we";
                  "sn", "wn";
-                 "se", "we"]; 
+                 "se", "we"];
 
-% Generate a  Transition System that does not contain crossing paths
+% Directions of vehicles on crossroad
+% 1 vehicle
+%dirs = ["ew"];
+% 2 vehicle
+dirs = ["ew","wn"];
+% 3 vehicle
+%dirs = ["ew","wn","nw"];
+% 4 vehicle
+%dirs = ["ew","wn","nw","se"];
+
+% Generate Transition System for the crossroad
+TS = TScrossroad(dirs); 
+
+% Synthesize a model that does not contain any states with vehicles
+% colliding on crossing paths
 TS.synthesizeWithSPs(crossingPaths);
-% Plot the verified TS
+% Plot the synthesized TS
 TS.plotTS();

@@ -39,7 +39,7 @@ classdef TScrossroad < TransitionSystem
                 % Synthesize only directions that affect the transition system
                 if all(contains(crossingDirections(i,:), extractAfter(obj.atomicProps,1)))
                     % Generate the Safety Property as a Büchi Automata
-                    safetyProperty = SafetyProperty(crossingDirections(i,:));
+                    safetyProperty = SafetyPropertyBA(crossingDirections(i,:));
                     % Verify the TS with BA
                     obj.synthesizeWithBA(safetyProperty);
                 end
@@ -103,4 +103,5 @@ classdef TScrossroad < TransitionSystem
             
         end
     end
+end
 
