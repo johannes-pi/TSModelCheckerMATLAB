@@ -46,7 +46,9 @@ classdef TScrossroad < TransitionSystem
             end
             
         end
-        
+    end
+    
+    methods(Static)
         function verified = verifyModel(atInput, atPassing,crossingPaths)
             %VERIFYMODEL Verify the selected directions with model checking
             %   Detailed explanation goes here
@@ -77,8 +79,7 @@ classdef TScrossroad < TransitionSystem
             TS = TScrossroad(directions);
             
             % Generate a verified Transition System with Büchi Automata
-            %TS = getVerifiedTS(TS, crossingPaths);
-            TS.synthesizeWithSP(crossingPaths);
+            TS.synthesizeWithSPs(crossingPaths);
             
             % check if state exists
             if any(currentState == TS.states)
