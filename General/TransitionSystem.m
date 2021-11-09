@@ -24,8 +24,8 @@ classdef TransitionSystem < handle
             obj.labels = labels;
         end
         
-        function plotedDigraph = plotTS(obj, figureNr)
-            %PLOTEDDIGRAPH Plot a transition system as digraph.
+        function plotedDigraph = plot(obj, figureNr)
+            %PLOT Plot the transition system as digraph.
             %   Detailed explanation goes here
             arguments
                 obj
@@ -48,26 +48,6 @@ classdef TransitionSystem < handle
             graph = digraph(EdgeTable,NodeTable);
 
             plotedDigraph = plot(graph,'EdgeLabel', graph.Edges.Code, 'NodeLabel', graph.Nodes.Label);
-        end
-        
-        function APStruct = labelToAPStruct(obj, label)
-            % LABELTOAPSTRUCT Convert the atomic propositions contained in
-            % a label to positive logical values in a structure containing
-            % all atomic propositions
-            arguments
-                obj     (1,1) TransitionSystem 
-                label   (1,1) string   % containing labels separeted by space
-            end
-            
-            % generate structure with all APs
-            for atomicProp = obj.atomicProps
-                APStruct.(atomicProp) = 0;
-            end
-            % set atomic propositions from label to true            
-            activeAPs = split(label)'; % get all active atomic propositions from label (delimiter is " ")
-            for atomicProp = activeAPs
-                APStruct.(atomicProp) = 1;
-            end
         end
         
         function synthesizeWithBA(obj, BA, loopDetectionActive)
@@ -240,8 +220,10 @@ classdef TransitionSystem < handle
                     if all(state ~= Im) && all(state ~= FSm)
                         % not from init reachable or not reaches a final state
                         if ~any(Im == Sm(logical(adjMatrixReachable(:,Sm == state)))) ... % from a init state not reachable
-                                || ~any(FSm == Sm(logical(adjMatrixReachable(Sm == state,:)))) % not leading to a final state
-                            Sm(state == Sm) = []; % remove state
+                                || ~any(FSm == Sm(logical(adjMatrixReachable(Sm == state,:)))','all') % not leading to a final state
+                            adjMatrixReachable(Sm == state,:) = [];% remove from adjacency matrix
+                            adjMatrixReachable(:,Sm == state) = [];
+                            Sm(state == Sm) = []; % remove state                           
                             Trm(any(state == Trm(:,[1 2]),2),:) = []; % remove all transitions to and from this state
                         end
                     end
@@ -402,6 +384,30 @@ classdef TransitionSystem < handle
             % end parallelization when last TS added
             parallelizedTS = TSa;
         end
+    end
+    
+    methods (Access = private)
+        
+        function APStruct = labelToAPStruct(obj, label)
+            % LABELTOAPSTRUCT Convert the atomic propositions contained in
+            % a label to positive logical values in a structure containing
+            % all atomic propositions
+            arguments
+                obj     (1,1) TransitionSystem
+                label   (1,1) string   % containing labels separeted by space
+            end
+            
+            % generate structure with all APs
+            for atomicProp = obj.atomicProps
+                APStruct.(atomicProp) = 0;
+            end
+            % set atomic propositions from label to true
+            activeAPs = split(label)'; % get all active atomic propositions from label (delimiter is " ")
+            for atomicProp = activeAPs
+                APStruct.(atomicProp) = 1;
+            end
+        end
+        
     end
 end
 

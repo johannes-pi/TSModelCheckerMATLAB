@@ -46,4 +46,4 @@ TS = TScrossroad(dirs);
 % colliding on crossing paths
 TS.synthesizeWithSPs(crossingPaths);
 % Plot the synthesized TS
-TS.plotTS();
+TS.plot();
