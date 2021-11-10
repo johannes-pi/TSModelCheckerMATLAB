@@ -2,10 +2,6 @@ classdef TSvehicle < TransitionSystem
     %TSVEHICLE Transition system of a vehicle on a crossroad.
     %   Detailed explanation goes here
     
-    properties
-        Property1
-    end
-    
     methods
         function obj = TSvehicle(direction)
             %TSVEHICLE Construct an instance of this class

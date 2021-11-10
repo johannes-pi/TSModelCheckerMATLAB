@@ -39,11 +39,23 @@ dirs = ["ew","wn"];
 % 4 vehicle
 %dirs = ["ew","wn","nw","se"];
 
-% Generate Transition System for the crossroad
-TS = TScrossroad(dirs); 
+
+% Generate a transition system for every vehicle
+for i = 1:length(dirs)
+    TSvehicles(i) = TSvehicle(dirs(i));
+end
+
+% Generate a transition system for the crossroad
+TS = TScrossroad(TSvehicles);
+
+% Generate the Safety Properties as a Büchi Automatas
+for i = 1:size(crossingPaths,1)
+    safetyProperties(i) = getSPcrossingPaths(crossingPaths(i,:));    
+end
 
 % Synthesize a model that does not contain any states with vehicles
 % colliding on crossing paths
-TS.synthesizeWithSPs(crossingPaths);
+TS.synthesizeWithSPs(safetyProperties, crossingPaths);
+
 % Plot the synthesized TS
 TS.plot();

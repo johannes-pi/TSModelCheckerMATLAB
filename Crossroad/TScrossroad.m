@@ -1,20 +1,15 @@
 classdef TScrossroad < TransitionSystem
-    %TSCROSSROAD Transition sytem of the whole crossroad with all vehicle
-    %transition systems.
+    %TSCROSSROAD Transition sytem of the whole crossroad including all
+    %vehicles.
     %   Detailed explanation goes here
     
     methods
-        function obj = TScrossroad(vehDirs)
-            %TSCROSSROAD Directions from the vehicles that are crossing the
-            %crossroad.
+        function obj = TScrossroad(TSvehicles)
+            %TSCROSSROAD Generate a crossroad transition system with
+            %transition systems from all vehicles on crossroad.
             %   Detailed explanation goes here
             arguments
-                vehDirs                 (1,:) string    % directions of different vehicles on crossroad
-            end
-            
-            % generate a transition system for every vehicle
-            for i = 1:length(vehDirs)
-                TSvehicles(i) = TSvehicle(vehDirs(i));
+                TSvehicles                 (1,:) TSvehicle    % transition systems from all the vehicles on crossroad
             end
             
             % Parallelize all this vehicle transition systems to one crossroad
@@ -24,24 +19,24 @@ classdef TScrossroad < TransitionSystem
             obj@TransitionSystem(TSp.states, TSp.actions, TSp.transitions, TSp.initialStates, TSp.atomicProps, TSp.labels);
         end
         
-        function synthesizeWithSPs(obj, crossingDirections)
+        function synthesizeWithSPs(obj, safetyProperties, crossingDirections)
             %SYNTHESISWITHSPS Synthesize with safety property to exclude
             %states that does not meet the safety property. The safety
             %property is generated from the crossing directions.
             arguments
                 obj                 (1,1) TransitionSystem % the transition system to check and modify
-                crossingDirections  (:,2) string % contains string pairs that show crossing paths at crossroad
+                safetyProperties    (:,1) BuchiAutomata % the safety properties used to check the transition system
+                crossingDirections  (:,2) string % contains string pairs that show crossing paths at crossroad 
+                %(must be the same that are used for generation of the safety properties)
             end
             
             % Make a safety property for every crossing directions pair and
             % synthesize them with the transition system
-            for i = 1:size(crossingDirections,1)
+            for i = 1:length(safetyProperties)
                 % Synthesize only directions that affect the transition system
                 if all(contains(crossingDirections(i,:), extractAfter(obj.atomicProps,1)))
-                    % Generate the Safety Property as a Büchi Automata
-                    safetyProperty = SafetyPropertyBA(crossingDirections(i,:));
                     % Verify the TS with BA
-                    obj.synthesizeWithBA(safetyProperty);
+                    obj.synthesizeWithBA(safetyProperties(i));
                 end
             end
             
@@ -75,11 +70,22 @@ classdef TScrossroad < TransitionSystem
                 currentState = currentState + join(repmat("p",1,length(atPassing)),"");
             end
             
-            % Generate Transition System for the crossroad
-            TS = TScrossroad(directions);
+            % Generate a transition system for every vehicle
+            for i = 1:length(dirs)
+                TSvehicles(i) = TSvehicle(dirs(i));
+            end
             
-            % Generate a verified Transition System with Büchi Automata
-            TS.synthesizeWithSPs(crossingPaths);
+            % Generate a transition system for the crossroad
+            TS = TScrossroad(TSvehicles);
+            
+            % Generate the Safety Properties as a Büchi Automatas
+            for i = 1:size(crossingPaths,1)
+                safetyProperties(i) = getSPcrossingPaths(crossingPaths(i,:));   
+            end
+            
+            % Synthesize a model that does not contain any states with vehicles
+            % colliding on crossing paths
+            TS.synthesizeWithSPs(safetyProperties, crossingPaths);
             
             % check if state exists
             if any(currentState == TS.states)
