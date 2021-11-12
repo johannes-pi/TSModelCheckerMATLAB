@@ -48,7 +48,7 @@ classdef TScrossroad < TransitionSystem
             %VERIFYMODEL Verify the selected directions with model checking
             %   Detailed explanation goes here
             arguments
-                atInput         (1,:) string % contains directions from vehicles at input nodes
+                atInput         (1,:) string % contains directions from vehicles at input nodes that want to pass the crossroad
                 atPassing       (1,:) string % contains directions from vehicles passing the crossroad
                 crossingPaths   (:,2) string % contains string pairs that show crossing paths at crossroad
             end
@@ -71,7 +71,7 @@ classdef TScrossroad < TransitionSystem
             end
             
             % Generate a transition system for every vehicle
-            for i = 1:length(dirs)
+            for i = 1:length(directions)
                 TSvehicles(i) = TSvehicle(dirs(i));
             end
             
