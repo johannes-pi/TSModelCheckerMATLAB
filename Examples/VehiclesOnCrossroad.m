@@ -38,6 +38,14 @@ dirs = ["ew","wn"];
 %dirs = ["ew","wn","nw"];
 % 4 vehicle
 %dirs = ["ew","wn","nw","se"];
+% 5 vehicle
+%dirs = ["ew","wn","nw","se","es"];
+% 6 vehicle
+%dirs = ["ew","wn","nw","se","es","sw"];
+% 7 vehicle - Takes around 3 minutes
+%dirs = ["ew","wn","nw","se","es","sw","ns"];
+% 8 vehicle - Takes around 30 mins
+%dirs = ["ew","wn","nw","se","es","sw","ns","ws"];
 
 
 % Generate a transition system for every vehicle
