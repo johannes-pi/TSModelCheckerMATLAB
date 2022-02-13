@@ -33,6 +33,7 @@ classdef TScrossroad < TransitionSystem
             % Make a safety property for every crossing directions pair and
             % synthesize them with the transition system
             for i = 1:length(safetyProperties)
+
                 % Synthesize only directions that affect the transition system
                 if all(contains(crossingDirections(i,:), extractAfter(obj.atomicProps,1)))
                     % Verify the TS with BA

@@ -106,6 +106,10 @@ classdef TransitionSystem < handle
                 end
             end
             
+            % Depth First Search - To get only the states reachable from
+            % the initial state
+            Trm = DFS_fromInitialState(Trm,Im);
+            
             % Atomic propositions
             APm = BA.states;
             
