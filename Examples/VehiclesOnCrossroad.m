@@ -35,9 +35,9 @@ crossingPaths = ["ne", "ew";
 % 2 vehicle
 %dirs = ["ew","wn"];
 % 3 vehicle
-%dirs = ["ew","wn","nw"];
+dirs = ["ew","wn","nw"];
 % 4 vehicle
-dirs = ["ew","wn","nw","se"];
+%dirs = ["ew","wn","nw","se"];
 % 5 vehicle
 %dirs = ["ew","wn","nw","se","es"];
 % 6 vehicle
