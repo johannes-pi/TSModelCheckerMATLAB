@@ -38,7 +38,7 @@ classdef TransitionSystem < handle
             else
                 figure
             end
-            
+                    
             % Digraph
             % table with all states
             NodeTable = table(obj.states', obj.labels(:,2),'VariableNames',{'Name' 'Label'});
@@ -48,6 +48,13 @@ classdef TransitionSystem < handle
             graph = digraph(EdgeTable,NodeTable);
 
             plotedDigraph = plot(graph,'EdgeLabel', graph.Edges.Code, 'NodeLabel', graph.Nodes.Label);
+            
+            % For better visuals:
+            plotedDigraph.MarkerSize = 8;
+            plotedDigraph.NodeColor = 'black';
+            plotedDigraph.LineWidth = 2;
+            highlight(plotedDigraph,obj.states(1),'NodeColor','Blue');
+            highlight(plotedDigraph,obj.states(end),'NodeColor','Green');
         end
         
         function synthesizeWithBA(obj, BA, loopDetectionActive)
@@ -105,6 +112,10 @@ classdef TransitionSystem < handle
                     end
                 end
             end
+            
+            % Depth First Search - To get only the states reachable from
+            % the initial state
+            Trm = DFS_fromInitialState(Trm,Im);
             
             % Atomic propositions
             APm = BA.states;

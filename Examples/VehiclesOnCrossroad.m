@@ -33,11 +33,19 @@ crossingPaths = ["ne", "ew";
 % 1 vehicle
 %dirs = ["ew"];
 % 2 vehicle
-dirs = ["ew","wn"];
+%dirs = ["ew","wn"];
 % 3 vehicle
-%dirs = ["ew","wn","nw"];
+dirs = ["ew","wn","nw"];
 % 4 vehicle
 %dirs = ["ew","wn","nw","se"];
+% 5 vehicle
+%dirs = ["ew","wn","nw","se","es"];
+% 6 vehicle
+%dirs = ["ew","wn","nw","se","es","sw"];
+% 7 vehicle - Takes around 3 minutes
+%dirs = ["ew","wn","nw","se","es","sw","ns"];
+% 8 vehicle - Takes around 30 mins
+%dirs = ["ew","wn","nw","se","es","sw","ns","ws"];
 
 
 % Generate a transition system for every vehicle
@@ -52,6 +60,7 @@ TS = TScrossroad(TSvehicles);
 for i = 1:size(crossingPaths,1)
     safetyProperties(i) = getSPcrossingPaths(crossingPaths(i,:));    
 end
+
 
 % Synthesize a model that does not contain any states with vehicles
 % colliding on crossing paths
